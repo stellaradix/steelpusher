@@ -11,5 +11,10 @@ config_version=5
 [application]
 
 config/name="steel pusher"
+run/main_scene="uid://bl4kg2l32lmde"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_state_charts/plugin.cfg")

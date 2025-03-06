@@ -1,8 +1,26 @@
-[gd_scene load_steps=2 format=3 uid="uid://8tups5t6y8gi"]
+[gd_scene load_steps=6 format=3 uid="uid://8tups5t6y8gi"]
+
+[ext_resource type="Script" uid="uid://x3lojlgg5apg" path="res://scenes/player.gd" id="1_3vyb7"]
+[ext_resource type="Script" uid="uid://0cfgif0vlvve" path="res://addons/godot_state_charts/state_chart.gd" id="2_g2els"]
+[ext_resource type="Script" uid="uid://lcgwch42bm7f" path="res://addons/godot_state_charts/parallel_state.gd" id="3_dqkch"]
+[ext_resource type="Script" uid="uid://cs4nbw6lbgo7q" path="res://addons/godot_state_charts/compound_state.gd" id="4_qlg0r"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sgp6g"]
 
 [node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_3vyb7")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_sgp6g")
+
+[node name="StateChart" type="Node" parent="."]
+script = ExtResource("2_g2els")
+metadata/_custom_type_script = "uid://0cfgif0vlvve"
+
+[node name="ParallelState" type="Node" parent="StateChart"]
+script = ExtResource("3_dqkch")
+metadata/_custom_type_script = "uid://lcgwch42bm7f"
+
+[node name="CompoundState" type="Node" parent="StateChart/ParallelState"]
+script = ExtResource("4_qlg0r")
+metadata/_custom_type_script = "uid://cs4nbw6lbgo7q"
