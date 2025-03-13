@@ -1,8 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://8tups5t6y8gi"]
+[gd_scene load_steps=3 format=3 uid="uid://8tups5t6y8gi"]
 
 [ext_resource type="Script" uid="uid://x3lojlgg5apg" path="res://scenes/player/player.gd" id="1_3vyb7"]
-[ext_resource type="Script" uid="uid://cyjj3nyqr8e3y" path="res://addons/state_machine_nodes/state_machine.gd" id="2_qhqgy"]
-[ext_resource type="Script" uid="uid://dsnjlxvj4s1uu" path="res://addons/state_machine_nodes/state_node.gd" id="3_dqkch"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sgp6g"]
 
@@ -12,10 +10,4 @@ script = ExtResource("1_3vyb7")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_sgp6g")
 
-[node name="StateMachine" type="Node" parent="."]
-script = ExtResource("2_qhqgy")
-metadata/_custom_type_script = "uid://cyjj3nyqr8e3y"
-
-[node name="StateNode" type="Node" parent="StateMachine"]
-script = ExtResource("3_dqkch")
-metadata/_custom_type_script = "uid://dsnjlxvj4s1uu"
+[node name="CoyoteTimer" type="Timer" parent="."]

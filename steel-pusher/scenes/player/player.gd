@@ -2,7 +2,6 @@ class_name Player extends CharacterBody3D
 
 
 @onready var camera = get_viewport().get_camera_3d()
-@onready var state_chart = $StateChart
 
 var x_sensitivity = 1
 var y_sensitivity = 1
@@ -18,14 +17,16 @@ const Y_LOOK_MIN = -PI/2
 
 var dir_input = Vector2.ZERO
 
+@export_range(0,100) var push_speed = 1.0
+
 ## The directional force that is applied to the player every frame in the input direction while on the floor
 @export_range(0,100) var floor_speed = 50.0
-## Drag is applied as an equal opposite force to the player's velocity. This is the factor of that force on the ground. Technical range is 0-1 but usable range is smaller.
-@export_range(0,.2) var floor_drag = .05
+## Drag is applied as an equal opposite force to the player's velocity
+@export_range(0,40) var floor_drag = 10.0
 ## The directional force that is applied to the player every frame in the input direction
 @export_range(0,100) var air_speed = 50.0
-## Drag is applied as an equal opposite force to the player's velocity. This is the factor of that force in the air. Technical range is 0-1 but usable range is smaller.
-@export_range(0,.2) var air_drag = .008
+## Drag is applied as an equal opposite force to the player's velocity
+@export_range(0,.2) var air_drag = 0.0
 ## Not yet implemented
 @export var max_speed = 100
 
@@ -46,28 +47,24 @@ func _process(delta: float) -> void:
 		controller_update()
 
 func _physics_process(delta: float) -> void:
-	pass
-
-func _on_ground_state_state_physics_processing(delta: float) -> void:
-	control(delta)
-	do_drag(delta)
-	move()
-
-func _on_air_state_state_physics_processing(delta: float) -> void:
-	control(delta,air_speed)
-	do_drag(delta,air_drag)
-	do_gravity(delta)
-	move()
+	if Input.is_action_pressed("push"):
+		push(Vector3.ZERO, push_speed)
+	elif Input.is_action_pressed("pull"):
+		pull(Vector3.ZERO, push_speed)
 	if is_on_floor():
-		state_chart.send_event("to_ground")
+		move(delta,floor_speed,floor_drag)
+	else:
+		move(delta,air_speed,air_drag)
+		do_gravity(delta)
 
+#region getting input
 func _input(event):
 	if event is InputEventMouse:
 		mouse_update(event)
-	if event.is_action_pressed("jump"):
+	elif event.is_action_pressed("jump"):
 		jump()
-		state_chart.send_event("to_air")
-	
+	elif event.is_action_pressed("escape"):
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func mouse_update(event: InputEventMouse):
@@ -76,10 +73,17 @@ func mouse_update(event: InputEventMouse):
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		camera_rotate(event.relative.x, event.relative.y, MOUSE_LOOK_SPEED)
 
+func control(delta):
+	#get player input vector, normalized
+	dir_input = Input.get_vector("left","right","forward","back").normalized()
+
 func controller_update():
 	var controller_input = Input.get_vector("look left","look right","look up","look down")
 	if controller_input != Vector2.ZERO:
 		camera_rotate(controller_input.x,controller_input.y, CONTROLLER_LOOK_SPEED)
+#endregion
+
+#region camera
 
 func camera_rotate(relative_x: float, relative_y: float,look_speed):
 		# modify accumulated mouse rotation
@@ -91,21 +95,19 @@ func camera_rotate(relative_x: float, relative_y: float,look_speed):
 		camera.transform.basis = Basis()
 		rotate_object_local(Vector3(0, 1, 0), rot_x) # first rotate in Y
 		camera.rotate_object_local(Vector3(1, 0, 0), rot_y) # then rotate in X
+#endregion
 
-# -- Movement functions --
+#region basic movement code
 
-
-func control(delta,move_speed: float = floor_speed):
-	#get player input vector, normalized
-	dir_input = Input.get_vector("left","right","forward","back").normalized()
+func move(delta: float,move_speed: float = floor_speed,drag: float = floor_drag):
+	control(delta)
 	add_local_velocity(Vector3(dir_input.x,0,dir_input.y) * delta * move_speed)
-
-func move():
+	do_drag(delta, drag)
 	move_and_slide()
 
 func do_drag(delta: float, move_drag: float = floor_drag):
-	velocity.x += -velocity.x * move_drag
-	velocity.z += -velocity.z * move_drag
+	velocity.x += -velocity.x * move_drag * delta
+	velocity.z += -velocity.z * move_drag * delta
 
 func do_gravity(delta: float,grav: float = jump_gravity):
 	velocity.y -= grav * delta
@@ -124,3 +126,16 @@ func set_local_velocity(new_vel: Vector3) -> void:
 ## Adds velocity in relation to the camera
 func add_local_velocity(new_vel: Vector3) -> void:
 	velocity += new_vel.rotated(Vector3.UP, rot_x)
+#endregion
+
+#region pushing pulling
+
+func pull(anchor_point: Vector3 = Vector3.ZERO, magnitude: float = 1):
+	var direction = anchor_point - position
+	velocity += direction.normalized() * magnitude
+	print("pulling in direction: %s" % direction)
+
+func push(anchor_point: Vector3 = Vector3.ZERO, magnitude: float = 1):
+	pull(anchor_point,-magnitude)
+
+#endregion
